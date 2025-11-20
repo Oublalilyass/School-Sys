@@ -20,7 +20,46 @@ const pageNumberUpdated = (link) => {
         preserveState: true,
     });
 };
+let pageNumber = ref(1),
+    searchTerm = ref(usePage().props.search ?? ""),
+    class_id = ref(usePage().props.class_id ?? "");
 
+
+let studentsUrl = computed(() => {
+    const url = new URL(route("students.index"));
+
+    url.searchParams.set("page", pageNumber.value);
+
+    if (searchTerm.value) {
+        url.searchParams.set("search", searchTerm.value);
+    }
+
+    if (class_id.value) {
+        url.searchParams.append("class_id", class_id.value);
+    }
+
+    return url;
+});
+
+watch(
+    () => studentsUrl.value,
+    (newValue) => {
+        router.visit(newValue, {
+            replace: true,
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+);
+
+watch(
+    () => searchTerm.value,
+    (value) => {
+        if (value) {
+            pageNumber.value = 1;
+        }
+    }
+);
 
 // Initial obj deleteForm
 const deleteForm = useForm({});
