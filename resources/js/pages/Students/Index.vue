@@ -44,6 +44,8 @@ let studentsUrl = computed(() => {
 watch(
     () => studentsUrl.value,
     (newValue) => {
+        console.log(newValue);
+
         router.visit(newValue, {
             replace: true,
             preserveState: true,
@@ -121,7 +123,7 @@ const deleteStudent = (id) => {
                                 <MagnifyingGlass />
                             </div>
 
-                            <input type="text" placeholder="Search students data..." id="search"
+                            <input type="text" placeholder="Search students data..." id="search" v-model="searchTerm"
                                 class="block rounded-lg border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
 
