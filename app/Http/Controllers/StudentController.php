@@ -14,30 +14,22 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StudentController extends Controller
 {
-    public function index(Request $request)
-    {
-        $studentsQuery = student::search($request);
+  public function index(Request $request)
+{
+    $studentsQuery = student::search($request);
 
-        $classes = ClassesResource::collection(classes::all());
-
-        return inertia(
-            'Students/Index',
-            [
-                'students' => StudentResource::collection(
-                    $studentsQuery->paginate(5)
-                ),
-                'classes' => $classes,
-                'search' => request('search') ?? ''
-            ]
-        );
-    }
-
-    protected function applySearch(Builder $query, $search)
-    {
-        return $query->when($search, function ($query, $search) {
-            $query->where('name', 'like', '%' . $search . '%');
-        });
-    }
+    return inertia(
+        'Students/Index',
+        [
+            'students' => StudentResource::collection(
+                $studentsQuery->paginate(10)->appends($request->all())
+            ),
+            'classes' => ClassesResource::collection(classes::all()),
+            'search' => $request->search ?? '',
+            'class_id' => $request->class_id ?? '',
+        ]
+    );
+}
 
     public function create()
     {

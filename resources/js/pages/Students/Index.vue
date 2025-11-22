@@ -5,27 +5,29 @@ import { Head, Link, router, useForm, usePage } from "@inertiajs/vue3";
 import { ref, watch, computed } from "vue";
 import { route } from 'ziggy-js';
 
-
-
-
 const props = defineProps({
-    students: { type: Object },
+    students: Object,
+    classes: Object,
 });
 
+const pageNumber = ref(1);
+const searchTerm = ref(usePage().props.search ?? "");
+const class_id = ref(usePage().props.class_id ?? "");
+const selectedClass = ref(usePage().props.class_id ?? "");
+
+
+// Pagination click
 const pageNumberUpdated = (link) => {
-    if (!link.url) return;
-
-    router.visit(link.url, {
-        preserveScroll: true,
-        preserveState: true,
-    });
+    if (link.url) {
+        router.visit(link.url, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
 };
-let pageNumber = ref(1),
-    searchTerm = ref(usePage().props.search ?? ""),
-    class_id = ref(usePage().props.class_id ?? "");
 
-
-let studentsUrl = computed(() => {
+// Build URL dynamically
+const studentsUrl = computed(() => {
     const url = new URL(route("students.index"));
 
     url.searchParams.set("page", pageNumber.value);
@@ -35,49 +37,42 @@ let studentsUrl = computed(() => {
     }
 
     if (class_id.value) {
-        url.searchParams.append("class_id", class_id.value);
+        url.searchParams.set("class_id", class_id.value);
     }
 
     return url;
 });
 
-watch(
-    () => studentsUrl.value,
-    (newValue) => {
-        console.log(newValue);
+// Watch URL builder → trigger reload
+watch(() => studentsUrl.value, (newValue) => {
+    router.visit(newValue, {
+        replace: true,
+        preserveState: true,
+        preserveScroll: true,
+    });
+});
 
-        router.visit(newValue, {
-            replace: true,
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }
-);
+// Reset pagination when searching
+watch(() => searchTerm.value, () => {
+    pageNumber.value = 1;
+});
 
-watch(
-    () => searchTerm.value,
-    (value) => {
-        if (value) {
-            pageNumber.value = 1;
-        }
-    }
-);
+// Watch class filter
+watch(() => selectedClass.value, (value) => {
+    class_id.value = value;  // send filter to URL query
+    pageNumber.value = 1;    // reset pagination
+});
 
-// Initial obj deleteForm
+// Delete student
 const deleteForm = useForm({});
-
-// Method for delete student
 const deleteStudent = (id) => {
     if (confirm("Are you sure you want to delete this student ?")) {
         deleteForm.delete(route("students.destroy", id), {
             preserveScroll: true,
-            onSuccess: () => {
-                console.log("Delete successfully!! ");
-            }
         });
     }
-
 };
+
 // const editStudent = (id) => {
 //     console.log("Here ID of Student ", id);
 
@@ -127,11 +122,11 @@ const deleteStudent = (id) => {
                                 class="block rounded-lg border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
 
-                        <select
+                        <select v-model="selectedClass"
                             class="block rounded-lg border-0 py-2 ml-5 text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 sm:text-sm sm:leading-6">
                             <option value="">Filter By Class</option>
-                            <option>
-
+                            <option v-for="classname in props.classes.data" :key="classname.id" :value="classname.id">
+                                {{ classname.name }}
                             </option>
                         </select>
                     </div>
